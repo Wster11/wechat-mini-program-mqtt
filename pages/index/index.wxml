@@ -1,0 +1,9 @@
+<view class="page">
+  <view class="page__bd page__bd_spacing">
+    <button class="weui-btn" type="primary" bindtap='getToken'>获取TOKEN</button>
+    <button class="weui-btn" type="primary" bindtap='connect'>连接服务</button>
+    <button class="weui-btn" type="primary" plain="true" bindtap='subOne'>订阅主题</button>
+    <button class="weui-btn" type="primary" plain="true" bindtap='pubMsg'>发布消息</button>
+    <button class="weui-btn" type="primary" plain="true" bindtap='unSubscribe'>取消订阅</button>
+  </view>
+</view>
