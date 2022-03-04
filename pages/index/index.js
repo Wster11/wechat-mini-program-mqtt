@@ -1,27 +1,22 @@
 import mqtt from "../../utils/mqtt.min.js";
 
-// host在【MQTT】->【服务概览】->【服务配置】下的【连接地址】获取
-const host = "wxs://XXXXXXXX";
+const host = "wxs://xxxx.xxx.xx.xx"; //环信MQTT服务器地址 通过console后台[MQTT]->[服务概览]->[服务配置]下[连接地址]获取
 
 /**
  * 推荐使用真机调试、模拟器websocket连接不稳定
- *
- * appId、baseUrl、orgName、appName 需从console控制台获取
- *
  */
 
 var deviceId = "deviceId"; // MQTT 用户自定义deviceID
 
-var appId = "appId"; // 从console控制台获取
-var appName = "appName"; // appName
-var orgName = "orgName"; // orgName
+var appId = "appId"; // appID 通过console后台[MQTT]->[服务概览]->[服务配置]下[AppID]获取
 
-var baseUrl = "baseUrl"; // token域名 https://
+var restApiUrl = "restApiUrl"; //环信MQTT REST API地址 通过console后台[MQTT]->[服务概览]->[服务配置]下[REST API地址]获取
 
-var grantType = "password"; // 获取token接口的参数,不用改动
+var username = "username"; //自定义用户名 长度不超过64位即可
 
-var username = "username"; // IM用户名
-var password = "password"; // IM用户密码
+var appClientId = "appClientId"; // 开发者ID 通过console后台[应用概览]->[应用详情]->[开发者ID]下[ Client ID]获取
+
+var appClientSecret = "appClientSecret"; // 开发者密钥 通过console后台[应用概览]->[应用详情]->[开发者ID]下[ ClientSecret]获取
 
 Page({
   data: {
@@ -33,7 +28,7 @@ Page({
       protocolVersion: 4, // MQTT连接协议版本
       clientId: `${deviceId}@${appId}`, // deviceID@AppID
       clean: true, // cleanSession不保持持久会话
-      password: "", // 用户token, 可以通过getToken方法获取,或者去console控制台获取对应的token
+      password: "", // 用户密码通过getUserToken方法获取
       username,
       reconnectPeriod: 1000, // 1000毫秒，两次重新连接之间的间隔
       connectTimeout: 30 * 1000, // 1000毫秒，两次重新连接之间的间隔
@@ -42,17 +37,15 @@ Page({
     }
   },
   /**
-   * 客户端获取token(password)代码示例如下：
+   * 客户端获取appToken代码示例如下：
    */
-  getToken() {
+  getAppToken() {
     var that = this;
-    var api = `${baseUrl}/${orgName}/${appName}/token`;
-
+    var api = `${restApiUrl}/openapi/rm/app/token`;
     // 配置连接的用户名和密码
     var params = {
-      grant_type: grantType,
-      username,
-      password
+      appClientId,
+      appClientSecret
     };
     // 注意：可以对params加密等处理
     wx.request({
@@ -60,12 +53,45 @@ Page({
       data: params,
       method: "POST",
       success(res) {
-        const {
-          data: { access_token }
-        } = res;
-        that.data.options.password = access_token;
+        let appToken = res.data.body.access_token;
+        console.log("appToken", appToken);
+        // 根据appToken获取userToken
+        that.getUserToken(appToken);
+      },
+      fail() {
         wx.showModal({
-          content: access_token
+          content: "fail"
+        });
+      }
+    });
+  },
+
+  /**
+   * 客户端获取userToken(password)代码示例如下：
+   */
+  getUserToken(appToken) {
+    var that = this;
+    var api = `${restApiUrl}/openapi/rm/user/token`;
+    // 配置连接的用户名和密码
+    var params = {
+      username: username,
+      expires_in: 86400, // 过期时间，单位为秒，默认为3天，如需调整，可提工单调整
+      cid: `${deviceId}@${appId}`
+    };
+    // 注意：可以对params加密等处理
+    wx.request({
+      url: api,
+      data: params,
+      method: "POST",
+      header: {
+        Authorization: appToken
+      },
+      success(res) {
+        let userToken = res.data.body.access_token;
+        console.log("userToken", userToken);
+        that.data.options.password = userToken;
+        wx.showModal({
+          content: `userToken: ${userToken}`
         });
       },
       fail() {
@@ -75,6 +101,7 @@ Page({
       }
     });
   },
+
   connect() {
     // 开始连接
     this.data.client = mqtt.connect(host, this.data.options);
@@ -108,8 +135,6 @@ Page({
     this.data.client.on("offline", function () {
       console.log(" 服务器offline的回调");
     });
-
-   
   },
   subOne() {
     if (this.data.client && this.data.client.connected) {
