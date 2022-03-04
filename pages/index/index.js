@@ -18,6 +18,8 @@ var appClientId = "appClientId"; // 开发者ID 通过console后台[应用概览
 
 var appClientSecret = "appClientSecret"; // 开发者密钥 通过console后台[应用概览]->[应用详情]->[开发者ID]下[ ClientSecret]获取
 
+var clientId = `${deviceId}@${appId}`; // deviceID@AppID
+
 Page({
   data: {
     client: null, // 记录重连的次数
@@ -26,7 +28,7 @@ Page({
     options: {
       keepalive: 60,
       protocolVersion: 4, // MQTT连接协议版本
-      clientId: `${deviceId}@${appId}`, // deviceID@AppID
+      clientId: clientId,
       clean: true, // cleanSession不保持持久会话
       password: "", // 用户密码通过getUserToken方法获取
       username,
@@ -42,7 +44,7 @@ Page({
   getAppToken() {
     var that = this;
     var api = `${restApiUrl}/openapi/rm/app/token`;
-    // 配置连接的用户名和密码
+    // 接口参数
     var params = {
       appClientId,
       appClientSecret
@@ -72,11 +74,11 @@ Page({
   getUserToken(appToken) {
     var that = this;
     var api = `${restApiUrl}/openapi/rm/user/token`;
-    // 配置连接的用户名和密码
+    // 接口参数
     var params = {
       username: username,
       expires_in: 86400, // 过期时间，单位为秒，默认为3天，如需调整，可提工单调整
-      cid: `${deviceId}@${appId}`
+      cid: clientId
     };
     // 注意：可以对params加密等处理
     wx.request({
