@@ -53,7 +53,7 @@ Page({
       data: params,
       method: "POST",
       success(res) {
-        let appToken = res.data.body.access_token;
+        var appToken = res.data.body.access_token;
         console.log("appToken", appToken);
         // 根据appToken获取userToken
         that.getUserToken(appToken);
@@ -87,7 +87,7 @@ Page({
         Authorization: appToken
       },
       success(res) {
-        let userToken = res.data.body.access_token;
+        var userToken = res.data.body.access_token;
         console.log("userToken", userToken);
         that.data.options.password = userToken;
         wx.showModal({
