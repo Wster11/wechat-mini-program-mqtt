@@ -26,7 +26,7 @@ Page({
     reconnectCounts: 0,
     // MQTT连接的配置,注意传参！！！！
     options: {
-      keepalive: 60,
+      keepalive: 45,
       protocolVersion: 4, // MQTT连接协议版本
       clientId: clientId,
       clean: true, // cleanSession不保持持久会话
